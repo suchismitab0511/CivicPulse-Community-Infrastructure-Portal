@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation for Issue
+    function isValidIssue(data) {
+      return data.category is string && data.category.size() <= 64 &&
+             data.severity is string && (data.severity == 'Low' || data.severity == 'Medium' || data.severity == 'High' || data.severity == 'Critical') &&
+             data.description is string && data.description.size() <= 4096 &&
+             data.suggested_action is string && data.suggested_action.size() <= 4096 &&
+             data.imageUrl is string && data.imageUrl.size() <= 1048576 &&
+             data.address is string && data.address.size() <= 512 &&
+             data.upvotes is int &&
+             data.upvotedBy is list && data.upvotedBy.size() <= 10000 &&
+             data.status is string && (data.status == 'Open' || data.status == 'In Progress' || data.status == 'Resolved') &&
+             (data.latitude is float || data.latitude is int) &&
+             (data.longitude is float || data.longitude is int) &&
+             (data.createdAt == request.time || !('createdAt' in data));
+    }
+
+    // Validation for Contributor
+    function isValidContributor(data) {
+      return data.id is string && data.id.size() <= 64 &&
+             data.username is string && data.username.size() <= 128 &&
+             data.points is int &&
+             (data.updatedAt == request.time || !('updatedAt' in data));
+    }
+
+    // Rules for issues collection
+    match /issues/{issueId} {
+      allow read: if true;
+      allow create: if isValidId(issueId) && isValidIssue(incoming()) && incoming().upvotes == 0 && incoming().upvotedBy.size() == 0;
+      allow update: if isValidId(issueId) && isValidIssue(incoming()) && (
+        // Allow updating upvotes and upvotedBy list
+        incoming().diff(existing()).affectedKeys().hasOnly(['upvotes', 'upvotedBy']) ||
+        // Allow updating status
+        incoming().diff(existing()).affectedKeys().hasOnly(['status'])
+      );
+      allow delete: if false; // Deletion is not allowed by clients
+    }
+
+    // Rules for contributors collection
+    match /contributors/{contributorId} {
+      allow read: if true;
+      allow create: if isValidId(contributorId) && isValidContributor(incoming());
+      allow update: if isValidId(contributorId) && isValidContributor(incoming()) && (
+        // Allow updating points or other profile attributes
+        incoming().diff(existing()).affectedKeys().hasOnly(['points', 'updatedAt']) ||
+        incoming().diff(existing()).affectedKeys().hasOnly(['username', 'points', 'updatedAt'])
+      );
+      allow delete: if false;
+    }
+  }
+}
+

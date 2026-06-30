@@ -1,0 +1,6 @@
+{
+  "name": "CivicPulse",
+  "description": "A smart community platform for reporting infrastructure issues with AI-powered image analysis and live updates.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

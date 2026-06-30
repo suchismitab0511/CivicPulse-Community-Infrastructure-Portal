@@ -1,0 +1,75 @@
+{
+  "entities": {
+    "issue": {
+      "title": "Issue",
+      "description": "A reported civic infrastructure issue",
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": ["pothole", "streetlight_damage", "water_leak", "garbage_overflow", "road_damage", "other"]
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["Low", "Medium", "High", "Critical"]
+        },
+        "description": {
+          "type": "string"
+        },
+        "suggested_action": {
+          "type": "string"
+        },
+        "imageUrl": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        },
+        "address": {
+          "type": "string"
+        },
+        "upvotes": {
+          "type": "integer"
+        },
+        "upvotedBy": {
+          "type": "array"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Open", "In Progress", "Resolved"]
+        }
+      },
+      "required": ["category", "severity", "description", "imageUrl", "latitude", "longitude", "address", "upvotes", "upvotedBy", "status"]
+    },
+    "contributor": {
+      "title": "Contributor",
+      "description": "A local citizen's gamified profile tracking active contribution points",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "points": {
+          "type": "integer"
+        }
+      },
+      "required": ["id", "username", "points"]
+    }
+  },
+  "firestore": {
+    "/issues/{issueId}": {
+      "schema": "issue",
+      "description": "Collection of reported civic infrastructure issues"
+    },
+    "/contributors/{contributorId}": {
+      "schema": "contributor",
+      "description": "Collection of user/contributor profiles and gamification points"
+    }
+  }
+}
